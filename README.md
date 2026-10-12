@@ -4,7 +4,7 @@ A [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) desktop 
 
 CPU and RAM come from DMS itself (dgop). The GPU load, VRAM and temperatures are read from sysfs by `sensors.sh`, which takes a few milliseconds and needs no extra packages.
 
-The interface is in Russian for now.
+The interface is in English and Russian.
 
 ## Requirements
 
@@ -19,7 +19,11 @@ In DMS Settings → Plugins, add the registry `https://github.com/ilyamen/dms-pl
 git clone https://github.com/ilyamen/dms-hw-monitor ~/.config/DankMaterialShell/plugins/hwMonitor
 ```
 
-Enable it in Settings → Plugins and add the widget in Settings → Desktop Widgets.
+Enable it in Settings → Plugins and add the widget in Settings → Desktop Widgets. The widget's settings are on its card there.
+
+## Removal
+
+Uninstall the plugin in Settings → Plugins. It keeps nothing outside its folder.
 
 ## License
 
