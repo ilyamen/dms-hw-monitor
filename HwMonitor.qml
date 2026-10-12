@@ -7,9 +7,9 @@ import qs.Services
 import qs.Widgets
 import qs.Modules.Plugins
 
-// Системный монитор: CPU / GPU / RAM / VRAM с графиками и блок всех температур.
-// CPU, RAM, сеть и диск — из DgopService (как у встроенного монитора DMS),
-// видеокарта и температуры — из sysfs через sensors.sh.
+// Hardware monitor: CPU / GPU / RAM / VRAM with graphs and every temperature in one block.
+// CPU, RAM, network and disk come from DgopService (like the built-in DMS monitor),
+// the GPU and temperatures from sysfs through sensors.sh.
 DesktopPluginComponent {
     id: root
 
@@ -22,7 +22,7 @@ DesktopPluginComponent {
     readonly property color bgColor: Theme.withAlpha(Theme.surface, backgroundOpacity)
     readonly property color tileBg: Theme.withAlpha(Theme.surfaceContainerHigh, backgroundOpacity)
 
-    // ---------- данные ----------
+    // ---------- data ----------
 
     property var sensors: ({})
     property var gpuHistory: []
@@ -35,6 +35,33 @@ DesktopPluginComponent {
     readonly property var modules: ["cpu", "memory", "network", "disk"]
     Component.onCompleted: DgopService.addRef(modules)
     Component.onDestruction: DgopService.removeRef(modules)
+
+    // GPU model from dgop: "Radeon RX 7900 XT/7900 XTX/7900 GRE/7900M" -> "Radeon RX 7900"
+    property string gpuName: ""
+    Process {
+        running: true
+        command: ["dgop", "gpu", "--json"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const gpus = JSON.parse(text).gpus ?? [];
+                    const gpu = gpus.find(g => g.driver === "amdgpu") ?? gpus[0];
+                    root.gpuName = root.shortGpuName(gpu?.displayName ?? "");
+                } catch (e) {
+                    root.gpuName = "";
+                }
+            }
+        }
+    }
+
+    function shortGpuName(name) {
+        const variants = name.split("/");
+        if (variants.length < 2)
+            return name;
+        const words = variants[0].split(" ");
+        const common = words.indexOf(variants[1].trim().split(" ")[0]);
+        return common > 0 ? words.slice(0, common + 1).join(" ") : variants[0];
+    }
 
     Process {
         id: sensorsProc
@@ -63,17 +90,17 @@ DesktopPluginComponent {
         onTriggered: sensorsProc.running = true
     }
 
-    // ---------- формат ----------
+    // ---------- formatting ----------
 
     function gb(bytes) { return (bytes / 1073741824).toFixed(1); }
 
     function rate(bytesPerSec) {
         const b = bytesPerSec || 0;
         if (b >= 1048576)
-            return (b / 1048576).toFixed(1) + " МБ/с";
+            return I18n.trFor("hwMonitor", "%1 MB/s").arg((b / 1048576).toFixed(1));
         if (b >= 1024)
-            return Math.round(b / 1024) + " КБ/с";
-        return Math.round(b) + " Б/с";
+            return I18n.trFor("hwMonitor", "%1 KB/s").arg(Math.round(b / 1024));
+        return I18n.trFor("hwMonitor", "%1 B/s").arg(Math.round(b));
     }
 
     function tempColor(t, warn, hot) {
@@ -84,9 +111,9 @@ DesktopPluginComponent {
         return Theme.surfaceText;
     }
 
-    // ---------- элементы ----------
+    // ---------- components ----------
 
-    // Плитка: заголовок, крупное значение, подпись, график
+    // Tile: title, large value, caption, graph
     component Tile: Rectangle {
         id: tile
         property string icon
@@ -95,12 +122,12 @@ DesktopPluginComponent {
         property string sub
         property var history: []
         property real maxValue: 100
-        property real fill: -1   // 0..1 — полоска заполнения (для памяти)
+        property real fill: -1   // 0..1: fill bar (for memory)
 
         radius: Theme.cornerRadius / 1.5
         color: root.tileBg
 
-        // график
+        // graph
         Canvas {
             id: graph
             anchors.left: parent.left
@@ -184,7 +211,7 @@ DesktopPluginComponent {
         }
     }
 
-    // Температура: подпись + значение. Ширину задаёт строка температур — у всех одинаковую.
+    // Temperature: value over label. The row gives every one the same width.
     component TempItem: Column {
         property string label
         property real temp: 0
@@ -207,7 +234,7 @@ DesktopPluginComponent {
         }
     }
 
-    // ---------- вид ----------
+    // ---------- view ----------
 
     Rectangle {
         anchors.fill: parent
@@ -223,7 +250,7 @@ DesktopPluginComponent {
                 Layout.fillWidth: true
                 spacing: Theme.spacingS
                 DankIcon { name: "monitoring"; size: Theme.iconSize; color: Theme.primary }
-                StyledText { text: "Система"; font.pixelSize: Theme.fontSizeLarge; font.weight: Font.Medium; color: Theme.surfaceText }
+                StyledText { text: I18n.trFor("hwMonitor", "System"); font.pixelSize: Theme.fontSizeLarge; font.weight: Font.Medium; color: Theme.surfaceText }
                 Item { Layout.fillWidth: true }
                 StyledText {
                     text: "↓ " + root.rate(DgopService.networkRxRate) + "   ↑ " + root.rate(DgopService.networkTxRate)
@@ -232,7 +259,7 @@ DesktopPluginComponent {
                 }
             }
 
-            // Нагрузка
+            // Load
             GridLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -242,87 +269,101 @@ DesktopPluginComponent {
 
                 Tile {
                     Layout.fillWidth: true; Layout.fillHeight: true
-                    icon: "memory"; title: "Процессор"
+                    icon: "memory"; title: I18n.trFor("hwMonitor", "CPU")
                     value: Math.round(DgopService.cpuUsage) + "%"
-                    sub: DgopService.cpuFrequency > 0 ? (DgopService.cpuFrequency / 1000).toFixed(1) + " ГГц" : ""
+                    sub: DgopService.cpuFrequency > 0 ? I18n.trFor("hwMonitor", "%1 GHz").arg((DgopService.cpuFrequency / 1000).toFixed(1)) : ""
                     history: DgopService.cpuHistory
                 }
                 Tile {
                     Layout.fillWidth: true; Layout.fillHeight: true
-                    icon: "developer_board"; title: "Видеокарта"
+                    icon: "developer_board"; title: I18n.trFor("hwMonitor", "GPU")
                     value: Math.round(root.gpuBusy) + "%"
-                    sub: "RX 7900"
+                    sub: root.gpuName
                     history: root.gpuHistory
                 }
                 Tile {
                     Layout.fillWidth: true; Layout.fillHeight: true
-                    icon: "memory_alt"; title: "Память"
+                    icon: "memory_alt"; title: I18n.trFor("hwMonitor", "Memory")
                     value: Math.round(DgopService.memoryUsage) + "%"
-                    sub: root.gb(DgopService.usedMemoryKB * 1024) + " / " + root.gb(DgopService.totalMemoryKB * 1024) + " ГБ"
+                    sub: I18n.trFor("hwMonitor", "%1 / %2 GB").arg(root.gb(DgopService.usedMemoryKB * 1024)).arg(root.gb(DgopService.totalMemoryKB * 1024))
                     history: DgopService.memoryHistory
                     fill: DgopService.memoryUsage / 100
                 }
                 Tile {
                     Layout.fillWidth: true; Layout.fillHeight: true
-                    icon: "view_in_ar"; title: "Видеопамять"
+                    icon: "view_in_ar"; title: I18n.trFor("hwMonitor", "VRAM")
                     value: root.vramTotal > 0 ? Math.round(root.vramUsed / root.vramTotal * 100) + "%" : "—"
-                    sub: root.gb(root.vramUsed) + " / " + root.gb(root.vramTotal) + " ГБ"
+                    sub: I18n.trFor("hwMonitor", "%1 / %2 GB").arg(root.gb(root.vramUsed)).arg(root.gb(root.vramTotal))
                     fill: root.vramTotal > 0 ? root.vramUsed / root.vramTotal : 0
                     history: root.vramHistory
                 }
             }
 
-            // Температуры одним блоком + диск
-            Rectangle {
+            // Two blocks on the tile grid: temperatures under the first three tiles, disk under VRAM
+            Item {
+                id: bottomRow
+                readonly property real spacing: Theme.spacingS
+                // Same columns as the tile grid above
+                readonly property real column: (width - spacing * 3) / 4
                 Layout.fillWidth: true
-                implicitHeight: tempRow.implicitHeight + Theme.spacingM * 2
-                radius: Theme.cornerRadius / 1.5
-                color: root.tileBg
+                Layout.preferredHeight: tempRow.implicitHeight + Theme.spacingM * 2
 
-                RowLayout {
-                    id: tempRow
-                    anchors.fill: parent
-                    anchors.margins: Theme.spacingM
-                    spacing: Theme.spacingL
+                Rectangle {
+                    width: bottomRow.column * 3 + bottomRow.spacing * 2
+                    height: parent.height
+                    radius: Theme.cornerRadius / 1.5
+                    color: root.tileBg
 
-                    DankIcon { name: "thermostat"; size: Theme.iconSize; color: Theme.primary }
-                    // Равные ячейки: длинная подпись («GPU хотспот») не раздвигает соседей
-                    Row {
-                        id: temps
-                        readonly property int count: {
-                            let n = 0;
-                            for (let i = 0; i < children.length; i++)
-                                if (children[i].visible)
-                                    n++;
-                            return n;
+                    RowLayout {
+                        id: tempRow
+                        anchors.fill: parent
+                        anchors.margins: Theme.spacingM
+                        spacing: Theme.spacingS
+
+                        DankIcon { name: "thermostat"; size: Theme.iconSize; color: Theme.primary }
+                        // Equal cells, so a long label ("GPU hotspot") does not push the others aside
+                        Row {
+                            id: temps
+                            readonly property int count: {
+                                let n = 0;
+                                for (let i = 0; i < children.length; i++)
+                                    if (children[i].visible)
+                                        n++;
+                                return n;
+                            }
+                            readonly property real cellWidth: count > 0 ? width / count : 0
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignVCenter
+
+                            TempItem { width: temps.cellWidth; label: "CPU"; temp: (root.sensors.cpu_temp ?? 0) / 1000; warn: 75; hot: 90 }
+                            TempItem { width: temps.cellWidth; label: "GPU"; temp: (root.sensors.gpu_edge ?? 0) / 1000; warn: 75; hot: 90 }
+                            TempItem { width: temps.cellWidth; label: I18n.trFor("hwMonitor", "GPU hotspot"); temp: (root.sensors.gpu_junction ?? 0) / 1000; warn: 90; hot: 105 }
+                            TempItem { width: temps.cellWidth; label: "VRAM"; temp: (root.sensors.gpu_mem ?? 0) / 1000; warn: 85; hot: 100 }
+                            TempItem { width: temps.cellWidth; label: "SSD"; temp: (root.sensors.nvme_temp ?? 0) / 1000; warn: 60; hot: 70 }
                         }
-                        readonly property real cellWidth: count > 0 ? width / count : 0
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-
-                        TempItem { width: temps.cellWidth; label: "CPU"; temp: (root.sensors.cpu_temp ?? 0) / 1000; warn: 75; hot: 90 }
-                        TempItem { width: temps.cellWidth; label: "GPU"; temp: (root.sensors.gpu_edge ?? 0) / 1000; warn: 75; hot: 90 }
-                        TempItem { width: temps.cellWidth; label: "GPU хотспот"; temp: (root.sensors.gpu_junction ?? 0) / 1000; warn: 90; hot: 105 }
-                        TempItem { width: temps.cellWidth; label: "VRAM"; temp: (root.sensors.gpu_mem ?? 0) / 1000; warn: 85; hot: 100 }
-                        TempItem { width: temps.cellWidth; label: "SSD"; temp: (root.sensors.nvme_temp ?? 0) / 1000; warn: 60; hot: 70 }
                     }
+                }
 
-                    Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.outlineVariant; opacity: 0.5 }
+                Rectangle {
+                    x: parent.width - width
+                    width: bottomRow.column
+                    height: parent.height
+                    radius: Theme.cornerRadius / 1.5
+                    color: root.tileBg
 
-                    // Ширина под самое длинное значение, чтобы строка не прыгала вслед за скоростью диска
-                    TextMetrics {
-                        id: diskMetrics
-                        font.family: SettingsData.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
-                        text: "W 999.9 МБ/с"
-                    }
-
-                    ColumnLayout {
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        x: Theme.spacingM
+                        width: parent.width - Theme.spacingM * 2
                         spacing: 0
-                        Layout.preferredWidth: Math.ceil(diskMetrics.advanceWidth)
-                        StyledText { text: "Диск"; font.pixelSize: Theme.fontSizeSmall; color: Theme.surfaceTextSecondary }
-                        StyledText { text: "R " + root.rate(DgopService.diskReadRate); font.pixelSize: Theme.fontSizeSmall; color: Theme.surfaceText }
-                        StyledText { text: "W " + root.rate(DgopService.diskWriteRate); font.pixelSize: Theme.fontSizeSmall; color: Theme.surfaceText }
+
+                        Row {
+                            spacing: Theme.spacingXS
+                            DankIcon { name: "hard_drive"; size: Theme.fontSizeMedium; color: Theme.primary; anchors.verticalCenter: parent.verticalCenter }
+                            StyledText { text: I18n.trFor("hwMonitor", "Disk"); font.pixelSize: Theme.fontSizeSmall; color: Theme.surfaceTextSecondary }
+                        }
+                        StyledText { width: parent.width; elide: Text.ElideRight; text: "R " + root.rate(DgopService.diskReadRate); font.pixelSize: Theme.fontSizeSmall; color: Theme.surfaceText }
+                        StyledText { width: parent.width; elide: Text.ElideRight; text: "W " + root.rate(DgopService.diskWriteRate); font.pixelSize: Theme.fontSizeSmall; color: Theme.surfaceText }
                     }
                 }
             }

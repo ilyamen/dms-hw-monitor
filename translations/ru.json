@@ -1,0 +1,50 @@
+{
+    " s": {
+        " s": " с"
+    },
+    "%1 / %2 GB": {
+        "%1 / %2 GB": "%1 / %2 ГБ"
+    },
+    "%1 B/s": {
+        "%1 B/s": "%1 Б/с"
+    },
+    "%1 GHz": {
+        "%1 GHz": "%1 ГГц"
+    },
+    "%1 KB/s": {
+        "%1 KB/s": "%1 КБ/с"
+    },
+    "%1 MB/s": {
+        "%1 MB/s": "%1 МБ/с"
+    },
+    "Background opacity": {
+        "Background opacity": "Непрозрачность фона"
+    },
+    "CPU": {
+        "CPU": "Процессор"
+    },
+    "Disk": {
+        "Disk": "Диск"
+    },
+    "GPU": {
+        "GPU": "Видеокарта"
+    },
+    "GPU hotspot": {
+        "GPU hotspot": "GPU хотспот"
+    },
+    "How often to read the GPU load and temperatures. DMS updates CPU and RAM itself.": {
+        "How often to read the GPU load and temperatures. DMS updates CPU and RAM itself.": "Как часто читать нагрузку видеокарты и температуры. CPU и RAM обновляет сам DMS."
+    },
+    "Memory": {
+        "Memory": "Память"
+    },
+    "System": {
+        "System": "Система"
+    },
+    "Update every": {
+        "Update every": "Обновлять каждые"
+    },
+    "VRAM": {
+        "VRAM": "Видеопамять"
+    }
+}

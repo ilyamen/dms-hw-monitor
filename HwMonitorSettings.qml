@@ -9,17 +9,17 @@ PluginSettings {
 
     SliderSetting {
         settingKey: "updateSeconds"
-        label: "Обновлять каждые"
-        description: "Как часто читать нагрузку видеокарты и температуры. CPU и RAM обновляет сам DMS."
+        label: I18n.trFor("hwMonitor", "Update every")
+        description: I18n.trFor("hwMonitor", "How often to read the GPU load and temperatures. DMS updates CPU and RAM itself.")
         defaultValue: 2
         minimum: 1
         maximum: 10
-        unit: " с"
+        unit: I18n.trFor("hwMonitor", " s")
     }
 
     SliderSetting {
         settingKey: "backgroundOpacity"
-        label: "Непрозрачность фона"
+        label: I18n.trFor("hwMonitor", "Background opacity")
         defaultValue: 80
         minimum: 0
         maximum: 100

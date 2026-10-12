@@ -1,5 +1,5 @@
 #!/bin/sh
-# Печатает key=value: нагрузка и память видеокарты AMD + температуры (°C*1000).
+# Prints key=value lines: load and memory of an AMD GPU, and temperatures (°C × 1000).
 for d in /sys/class/drm/card*/device; do
     if [ -r "$d/gpu_busy_percent" ]; then
         echo "gpu_busy=$(cat "$d/gpu_busy_percent")"
@@ -19,6 +19,6 @@ for h in /sys/class/hwmon/hwmon*; do
                 echo "gpu_$(cat "$l")=$(cat "${l%_label}_input")"
             done ;;
         nvme)
-            [ -z "$nvme_done" ] && echo "nvme_temp=$(cat "$h/temp1_input")" && nvme_done=1 ;;
+            [ -z "${nvme_done:-}" ] && echo "nvme_temp=$(cat "$h/temp1_input")" && nvme_done=1 ;;
     esac
 done
