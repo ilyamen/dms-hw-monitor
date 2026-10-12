@@ -1,0 +1,15 @@
+{
+    "id": "hwMonitor",
+    "name": "Hardware Monitor",
+    "description": "Desktop widget with CPU, GPU, RAM and VRAM load graphs and every temperature in one row: CPU, GPU edge and hotspot, VRAM and SSD",
+    "version": "1.0.0",
+    "license": "MIT",
+    "author": "ilyamen",
+    "icon": "monitoring",
+    "type": "desktop",
+    "capabilities": ["desktop-widget"],
+    "component": "./HwMonitor.qml",
+    "settings": "./HwMonitorSettings.qml",
+    "requires_dms": ">=1.6.0",
+    "permissions": ["settings_read", "settings_write"]
+}
