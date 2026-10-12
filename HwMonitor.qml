@@ -184,8 +184,8 @@ DesktopPluginComponent {
         }
     }
 
-    // Температура: подпись + значение
-    component TempItem: ColumnLayout {
+    // Температура: подпись + значение. Ширину задаёт строка температур — у всех одинаковую.
+    component TempItem: Column {
         property string label
         property real temp: 0
         property real warn: 70
@@ -193,17 +193,17 @@ DesktopPluginComponent {
         visible: temp > 0
         spacing: 0
         StyledText {
+            anchors.horizontalCenter: parent.horizontalCenter
             text: Math.round(parent.temp) + "°"
             font.pixelSize: Theme.fontSizeXLarge
             font.weight: Font.Medium
             color: root.tempColor(parent.temp, parent.warn, parent.hot)
-            Layout.alignment: Qt.AlignHCenter
         }
         StyledText {
+            anchors.horizontalCenter: parent.horizontalCenter
             text: parent.label
             font.pixelSize: Theme.fontSizeSmall
             color: Theme.surfaceTextSecondary
-            Layout.alignment: Qt.AlignHCenter
         }
     }
 
@@ -286,16 +286,40 @@ DesktopPluginComponent {
                     spacing: Theme.spacingL
 
                     DankIcon { name: "thermostat"; size: Theme.iconSize; color: Theme.primary }
-                    TempItem { label: "CPU"; temp: (root.sensors.cpu_temp ?? 0) / 1000; warn: 75; hot: 90; Layout.fillWidth: true }
-                    TempItem { label: "GPU"; temp: (root.sensors.gpu_edge ?? 0) / 1000; warn: 75; hot: 90; Layout.fillWidth: true }
-                    TempItem { label: "GPU хотспот"; temp: (root.sensors.gpu_junction ?? 0) / 1000; warn: 90; hot: 105; Layout.fillWidth: true }
-                    TempItem { label: "VRAM"; temp: (root.sensors.gpu_mem ?? 0) / 1000; warn: 85; hot: 100; Layout.fillWidth: true }
-                    TempItem { label: "SSD"; temp: (root.sensors.nvme_temp ?? 0) / 1000; warn: 60; hot: 70; Layout.fillWidth: true }
+                    // Равные ячейки: длинная подпись («GPU хотспот») не раздвигает соседей
+                    Row {
+                        id: temps
+                        readonly property int count: {
+                            let n = 0;
+                            for (let i = 0; i < children.length; i++)
+                                if (children[i].visible)
+                                    n++;
+                            return n;
+                        }
+                        readonly property real cellWidth: count > 0 ? width / count : 0
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignVCenter
+
+                        TempItem { width: temps.cellWidth; label: "CPU"; temp: (root.sensors.cpu_temp ?? 0) / 1000; warn: 75; hot: 90 }
+                        TempItem { width: temps.cellWidth; label: "GPU"; temp: (root.sensors.gpu_edge ?? 0) / 1000; warn: 75; hot: 90 }
+                        TempItem { width: temps.cellWidth; label: "GPU хотспот"; temp: (root.sensors.gpu_junction ?? 0) / 1000; warn: 90; hot: 105 }
+                        TempItem { width: temps.cellWidth; label: "VRAM"; temp: (root.sensors.gpu_mem ?? 0) / 1000; warn: 85; hot: 100 }
+                        TempItem { width: temps.cellWidth; label: "SSD"; temp: (root.sensors.nvme_temp ?? 0) / 1000; warn: 60; hot: 70 }
+                    }
 
                     Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: Theme.outlineVariant; opacity: 0.5 }
 
+                    // Ширина под самое длинное значение, чтобы строка не прыгала вслед за скоростью диска
+                    TextMetrics {
+                        id: diskMetrics
+                        font.family: SettingsData.fontFamily
+                        font.pixelSize: Theme.fontSizeSmall
+                        text: "W 999.9 МБ/с"
+                    }
+
                     ColumnLayout {
                         spacing: 0
+                        Layout.preferredWidth: Math.ceil(diskMetrics.advanceWidth)
                         StyledText { text: "Диск"; font.pixelSize: Theme.fontSizeSmall; color: Theme.surfaceTextSecondary }
                         StyledText { text: "R " + root.rate(DgopService.diskReadRate); font.pixelSize: Theme.fontSizeSmall; color: Theme.surfaceText }
                         StyledText { text: "W " + root.rate(DgopService.diskWriteRate); font.pixelSize: Theme.fontSizeSmall; color: Theme.surfaceText }
