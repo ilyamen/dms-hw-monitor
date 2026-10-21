@@ -337,9 +337,26 @@ DesktopPluginComponent {
 
                             TempItem { width: temps.cellWidth; label: "CPU"; temp: (root.sensors.cpu_temp ?? 0) / 1000; warn: 75; hot: 90 }
                             TempItem { width: temps.cellWidth; label: "GPU"; temp: (root.sensors.gpu_edge ?? 0) / 1000; warn: 75; hot: 90 }
-                            TempItem { width: temps.cellWidth; label: I18n.trFor("hwMonitor", "GPU hotspot"); temp: (root.sensors.gpu_junction ?? 0) / 1000; warn: 90; hot: 105 }
-                            TempItem { width: temps.cellWidth; label: "VRAM"; temp: (root.sensors.gpu_mem ?? 0) / 1000; warn: 85; hot: 100 }
                             TempItem { width: temps.cellWidth; label: "SSD"; temp: (root.sensors.nvme_temp ?? 0) / 1000; warn: 60; hot: 70 }
+                            TempItem { width: temps.cellWidth; label: "HDD"; temp: (root.sensors.hdd_temp ?? 0) / 1000; warn: 50; hot: 60 }
+                            Column {
+                                width: temps.cellWidth
+                                visible: (root.sensors.power_w ?? 0) > 0
+                                spacing: 0
+                                StyledText {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: Math.round(root.sensors.power_w ?? 0) + "W"
+                                    font.pixelSize: Theme.fontSizeXLarge
+                                    font.weight: Font.Medium
+                                    color: Theme.primary
+                                }
+                                StyledText {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: "PPT"
+                                    font.pixelSize: Theme.fontSizeSmall
+                                    color: Theme.surfaceTextSecondary
+                                }
+                            }
                         }
                     }
                 }
