@@ -2,7 +2,7 @@
     "id": "hwMonitor",
     "name": "Hardware Monitor",
     "description": "Desktop widget with CPU, GPU, RAM and VRAM load graphs and every temperature in one row: CPU, GPU edge and hotspot, VRAM and SSD",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "license": "MIT",
     "author": "ilyamen",
     "icon": "monitoring",
