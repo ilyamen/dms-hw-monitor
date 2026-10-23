@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import qs.Common
+import qs.DCommon.Widgets
 import qs.Services
 import qs.Widgets
 import qs.Modules.Plugins
@@ -177,7 +178,7 @@ DesktopPluginComponent {
 
             RowLayout {
                 spacing: Theme.spacingXS
-                DankIcon { name: tile.icon; size: Theme.fontSizeMedium + 2; color: Theme.primary }
+                DIcon { name: tile.icon; size: Theme.fontSizeMedium + 2; color: Theme.primary }
                 StyledText { text: tile.title; font.pixelSize: Theme.fontSizeSmall; font.weight: Font.Medium; color: Theme.surfaceTextSecondary }
             }
             StyledText {
@@ -249,7 +250,7 @@ DesktopPluginComponent {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Theme.spacingS
-                DankIcon { name: "monitoring"; size: Theme.iconSize; color: Theme.primary }
+                DIcon { name: "monitoring"; size: Theme.iconSize; color: Theme.primary }
                 StyledText { text: I18n.trFor("hwMonitor", "System"); font.pixelSize: Theme.fontSizeLarge; font.weight: Font.Medium; color: Theme.surfaceText }
                 Item { Layout.fillWidth: true }
                 StyledText {
@@ -320,7 +321,7 @@ DesktopPluginComponent {
                         anchors.margins: Theme.spacingM
                         spacing: Theme.spacingS
 
-                        DankIcon { name: "thermostat"; size: Theme.iconSize; color: Theme.primary }
+                        DIcon { name: "thermostat"; size: Theme.iconSize; color: Theme.primary }
                         // Equal cells, so a long label ("GPU hotspot") does not push the others aside
                         Row {
                             id: temps
@@ -359,7 +360,7 @@ DesktopPluginComponent {
 
                         Row {
                             spacing: Theme.spacingXS
-                            DankIcon { name: "hard_drive"; size: Theme.fontSizeMedium; color: Theme.primary; anchors.verticalCenter: parent.verticalCenter }
+                            DIcon { name: "hard_drive"; size: Theme.fontSizeMedium; color: Theme.primary; anchors.verticalCenter: parent.verticalCenter }
                             StyledText { text: I18n.trFor("hwMonitor", "Disk"); font.pixelSize: Theme.fontSizeSmall; color: Theme.surfaceTextSecondary }
                         }
                         StyledText { width: parent.width; elide: Text.ElideRight; text: "R " + root.rate(DgopService.diskReadRate); font.pixelSize: Theme.fontSizeSmall; color: Theme.surfaceText }

@@ -10,6 +10,6 @@
     "capabilities": ["desktop-widget"],
     "component": "./HwMonitor.qml",
     "settings": "./HwMonitorSettings.qml",
-    "requires_dms": ">=1.6.0",
+    "requires_dms": ">=2.0.0",
     "permissions": ["settings_read", "settings_write"]
 }
